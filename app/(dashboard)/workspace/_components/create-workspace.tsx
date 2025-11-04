@@ -4,7 +4,8 @@ import { useState } from "react";
 import { PlusIcon } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import {
   Dialog,
@@ -35,20 +36,42 @@ import {
   InputGroupText,
   InputGroupTextarea,
 } from "@/components/ui/input-group";
-import { workspaceSchema } from "@/app/schemas/workspace";
+import { workspaceSchema, WorkspaceSchemaType } from "@/app/schemas/workspace";
+import { orpc } from "@/lib/orpc";
 
 export const CreateWorkspace = () => {
   const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
 
-  const form = useForm<z.infer<typeof workspaceSchema>>({
+  const createWorkspaceMutation = useMutation(
+    orpc.workspace.create.mutationOptions({
+      onSuccess: (newWorkspace) => {
+        toast.success(
+          `Workspace ${newWorkspace.workspaceName} created successfully`,
+        );
+
+        queryClient.invalidateQueries({
+          queryKey: orpc.workspace.list.queryKey(),
+        });
+
+        form.reset();
+        setOpen(false);
+      },
+      onError: () => {
+        toast.error("Failed to create workspace");
+      },
+    }),
+  );
+
+  const form = useForm<WorkspaceSchemaType>({
     resolver: zodResolver(workspaceSchema),
     defaultValues: {
       name: "",
     },
   });
 
-  function onSubmit(values: z.infer<typeof workspaceSchema>) {
-    console.log(values);
+  function onSubmit(values: WorkspaceSchemaType) {
+    createWorkspaceMutation.mutate(values);
   }
 
   return (
@@ -92,6 +115,7 @@ export const CreateWorkspace = () => {
                     aria-invalid={fieldState.invalid}
                     placeholder="My New Workspace"
                     autoComplete="off"
+                    disabled={createWorkspaceMutation.isPending}
                   />
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
@@ -110,11 +134,16 @@ export const CreateWorkspace = () => {
                 form.reset();
                 setOpen(false);
               }}
+              disabled={createWorkspaceMutation.isPending}
             >
               Cancel
             </Button>
-            <Button type="submit" form="workspace-form">
-              Create
+            <Button
+              type="submit"
+              form="workspace-form"
+              disabled={createWorkspaceMutation.isPending}
+            >
+              {createWorkspaceMutation.isPending ? "Creating..." : "Create"}
             </Button>
           </Field>
         </DialogFooter>
