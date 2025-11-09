@@ -6,6 +6,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { isDefinedError } from "@orpc/client";
 
 import {
   Dialog,
@@ -57,7 +58,17 @@ export const CreateWorkspace = () => {
         form.reset();
         setOpen(false);
       },
-      onError: () => {
+      onError: (error) => {
+        if (isDefinedError(error)) {
+          if (error.code === "RATE_LIMITED") {
+            toast.error(error.message);
+            return;
+          }
+
+          toast.error(error.message);
+          return;
+        }
+
         toast.error("Failed to create workspace");
       },
     }),
