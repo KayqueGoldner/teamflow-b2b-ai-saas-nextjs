@@ -5,7 +5,7 @@ import { PlusIcon } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { isDefinedError } from "@orpc/client";
 
@@ -38,6 +38,7 @@ interface CreateNewChannelProps {}
 
 export const CreateNewChannel = ({}: CreateNewChannelProps) => {
   const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const form = useForm<ChannelNameSchemaType>({
     resolver: zodResolver(channelNameSchema),
@@ -50,6 +51,9 @@ export const CreateNewChannel = ({}: CreateNewChannelProps) => {
     orpc.channel.create.mutationOptions({
       onSuccess: (newChannel) => {
         toast.success(`Channel ${newChannel.name} created`);
+        queryClient.invalidateQueries({
+          queryKey: orpc.channel.list.queryKey(),
+        });
         form.reset();
         setOpen(false);
       },

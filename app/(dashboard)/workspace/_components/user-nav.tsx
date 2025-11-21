@@ -6,6 +6,7 @@ import {
   PortalLink,
 } from "@kinde-oss/kinde-auth-nextjs/components";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import Image from "next/image";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -35,10 +36,11 @@ export const UserNav = () => {
           className="size-12 rounded-xl border-border/50 bg-background/50 transition-all duration-200 hover:rounded-lg hover:bg-accent hover:text-accent-foreground"
         >
           <Avatar>
-            <AvatarImage
+            <Image
               src={getAvatar(user.picture, user.email!)}
               alt={user.given_name!}
               className="object-cover"
+              fill
             />
             <AvatarFallback>
               {user.given_name?.slice(0, 2).toUpperCase()}
