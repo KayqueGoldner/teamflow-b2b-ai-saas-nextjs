@@ -5,6 +5,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
+import { orpc } from "@/lib/orpc";
 
 import { WorkspaceHeader } from "./_components/workspace-header";
 import { CreateNewChannel } from "./_components/create-new-channel";
@@ -15,13 +17,19 @@ interface WorkspaceIdLayoutProps {
   children: React.ReactNode;
 }
 
-const WorkspaceIdLayout = ({ children }: WorkspaceIdLayoutProps) => {
+const WorkspaceIdLayout = async ({ children }: WorkspaceIdLayoutProps) => {
+  const queryClient = getQueryClient();
+
+  await queryClient.prefetchQuery(orpc.channel.list.queryOptions());
+
   return (
     <>
       <div className="flex h-full w-80 flex-col border-r border-border bg-secondary">
         {/* header */}
         <div className="flex h-14 items-center border-b border-border px-4">
-          <WorkspaceHeader />
+          <HydrateClient client={queryClient}>
+            <WorkspaceHeader />
+          </HydrateClient>
         </div>
 
         <div className="px-4 py-2">
@@ -36,7 +44,9 @@ const WorkspaceIdLayout = ({ children }: WorkspaceIdLayoutProps) => {
               <ChevronDownIcon className="size-4 transition-transform duration-200" />
             </CollapsibleTrigger>
             <CollapsibleContent className="px-2 py-1">
-              <ChannelList />
+              <HydrateClient client={queryClient}>
+                <ChannelList />
+              </HydrateClient>
             </CollapsibleContent>
           </Collapsible>
         </div>
@@ -49,7 +59,9 @@ const WorkspaceIdLayout = ({ children }: WorkspaceIdLayoutProps) => {
               <ChevronUpIcon className="size-4 transition-transform duration-200" />
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <WorkspaceMembersList />
+              <HydrateClient client={queryClient}>
+                <WorkspaceMembersList />
+              </HydrateClient>
             </CollapsibleContent>
           </Collapsible>
         </div>
