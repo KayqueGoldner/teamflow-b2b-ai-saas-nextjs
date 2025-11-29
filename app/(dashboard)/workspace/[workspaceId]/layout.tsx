@@ -66,6 +66,8 @@ const WorkspaceIdLayout = async ({ children }: WorkspaceIdLayoutProps) => {
           </Collapsible>
         </div>
       </div>
+
+      {children}
     </>
   );
 };
