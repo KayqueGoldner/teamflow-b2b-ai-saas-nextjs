@@ -1,10 +1,16 @@
-import { MessageInputForm } from "@/app/(dashboard)/workspace/[workspaceId]/channel/[channelId]/_components/message/message-input-form";
+"use client";
+
+import { useParams } from "next/navigation";
+
+import { MessageInputForm } from "./_components/message/message-input-form";
 import { ChannelHeader } from "./_components/channel-header";
 import { MessageList } from "./_components/message-list";
 
 interface ChannelIdPageProps {}
 
 const ChannelIdPage = ({}: ChannelIdPageProps) => {
+  const { channelId } = useParams<{ channelId: string }>();
+
   return (
     <div className="flex h-screen w-full">
       {/* main channel */}
@@ -19,7 +25,7 @@ const ChannelIdPage = ({}: ChannelIdPageProps) => {
 
         {/* fixed input */}
         <div className="border-t bg-background p-4">
-          <MessageInputForm />
+          <MessageInputForm channelId={channelId} />
         </div>
       </div>
     </div>

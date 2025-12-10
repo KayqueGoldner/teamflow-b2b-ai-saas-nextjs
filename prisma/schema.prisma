@@ -11,11 +11,10 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model Channel {
-  id String @id @default(uuid())
+  id   String @id @default(uuid())
   name String
 
   createdAt DateTime @default(now())
@@ -25,5 +24,23 @@ model Channel {
   workspaceId String
   createdById String
 
+  messages Message[]
+
   @@unique([workspaceId, name])
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  content   String
+  imageUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  authorId     String
+  authorEmail  String
+  authorName   String
+  authorAvatar String
+
+  channelId String?
+  channel   Channel? @relation(fields: [channelId], references: [id])
 }
