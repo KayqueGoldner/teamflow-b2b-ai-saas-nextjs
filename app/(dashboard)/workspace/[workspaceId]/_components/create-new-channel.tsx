@@ -8,6 +8,7 @@ import * as z from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { isDefinedError } from "@orpc/client";
+import { useParams, useRouter } from "next/navigation";
 
 import {
   Dialog,
@@ -39,6 +40,8 @@ interface CreateNewChannelProps {}
 export const CreateNewChannel = ({}: CreateNewChannelProps) => {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const { workspaceId } = useParams<{ workspaceId: string }>();
 
   const form = useForm<ChannelNameSchemaType>({
     resolver: zodResolver(channelNameSchema),
@@ -54,8 +57,10 @@ export const CreateNewChannel = ({}: CreateNewChannelProps) => {
         queryClient.invalidateQueries({
           queryKey: orpc.channel.list.queryKey(),
         });
+
         form.reset();
         setOpen(false);
+        router.push(`/workspace/${workspaceId}/channel/${newChannel.id}`);
       },
       onError: (error) => {
         if (isDefinedError(error)) {
@@ -91,7 +96,7 @@ export const CreateNewChannel = ({}: CreateNewChannelProps) => {
           </DialogDescription>
         </DialogHeader>
 
-        <form id="channel-form" onSubmit={form.handleSubmit(onSubmit)}>
+        <form id="new-channel-form" onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup>
             <Controller
               name="name"
@@ -136,7 +141,7 @@ export const CreateNewChannel = ({}: CreateNewChannelProps) => {
             </Button>
             <Button
               type="submit"
-              form="channel-form"
+              form="new-channel-form"
               disabled={createChannelMutation.isPending}
             >
               {createChannelMutation.isPending
