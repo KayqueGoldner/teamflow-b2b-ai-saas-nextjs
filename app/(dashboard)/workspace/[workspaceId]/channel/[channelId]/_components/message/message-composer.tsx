@@ -31,7 +31,7 @@ export const MessageComposer = ({
         }}
         sendButton={
           <Button
-            type="button"
+            type="submit"
             size="sm"
             form={formId}
             disabled={disabled}

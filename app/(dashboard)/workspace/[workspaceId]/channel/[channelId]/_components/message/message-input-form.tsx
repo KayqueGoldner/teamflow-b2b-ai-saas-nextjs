@@ -2,7 +2,7 @@
 
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { Field, FieldError, FieldGroup } from "@/components/ui/field";
@@ -19,6 +19,8 @@ interface MessageInputFormProps {
 }
 
 export const MessageInputForm = ({ channelId }: MessageInputFormProps) => {
+  const queryClient = useQueryClient();
+
   const form = useForm<CreateMessageSchemaType>({
     resolver: zodResolver(createMessageSchema),
     defaultValues: {
@@ -32,6 +34,10 @@ export const MessageInputForm = ({ channelId }: MessageInputFormProps) => {
       onSuccess: () => {
         toast.success("Message sent successfully");
         form.reset();
+
+        queryClient.invalidateQueries({
+          queryKey: orpc.message.list.key(),
+        });
       },
       onError: () => {
         toast.error("Failed to send message");
@@ -46,7 +52,7 @@ export const MessageInputForm = ({ channelId }: MessageInputFormProps) => {
   return (
     <div className="flex items-center gap-2">
       <form
-        id="channel-form"
+        id="channel-message-form"
         onSubmit={form.handleSubmit(onSubmit)}
         className="w-full"
       >
@@ -58,7 +64,7 @@ export const MessageInputForm = ({ channelId }: MessageInputFormProps) => {
               <Field data-invalid={fieldState.invalid}>
                 <MessageComposer
                   field={field}
-                  formId="channel-form"
+                  formId="channel-message-form"
                   ariaInvalid={fieldState.invalid}
                   disabled={createMessageMutation.isPending}
                 />
