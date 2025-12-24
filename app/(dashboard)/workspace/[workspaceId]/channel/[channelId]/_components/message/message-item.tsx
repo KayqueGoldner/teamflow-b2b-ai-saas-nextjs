@@ -36,12 +36,12 @@ export const MessageItem = ({ message }: MessageItemProps) => {
           </p>
         </div>
 
-        <p className="max-w-none text-sm break-words">
+        <div className="max-w-none text-sm break-words">
           <SafeContent
             content={JSON.parse(message.content)}
             className="prose max-w-none text-sm break-words marker:text-primary dark:prose-invert"
           />
-        </p>
+        </div>
       </div>
     </div>
   );
