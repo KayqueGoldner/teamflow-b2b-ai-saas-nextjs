@@ -42,6 +42,21 @@ export const MessageItem = ({ message }: MessageItemProps) => {
             className="prose max-w-none text-sm break-words marker:text-primary dark:prose-invert"
           />
         </div>
+
+        {message.imageUrl && (
+          <div className="mt-2">
+            <Image
+              src={message.imageUrl}
+              alt="message image"
+              width={512}
+              height={512}
+              className="max-h-[320px] w-auto rounded-md object-contain"
+              loading="lazy"
+              placeholder="blur"
+              blurDataURL={message.imageUrl}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
