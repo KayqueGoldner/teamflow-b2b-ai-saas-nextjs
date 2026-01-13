@@ -2,11 +2,12 @@
 
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
-import { Loader2Icon } from "lucide-react";
+import { ChevronDownIcon, Loader2Icon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { orpc } from "@/lib/orpc";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/general/empty-state";
 
 import { MessageItem } from "./message/message-item";
 
@@ -64,12 +65,65 @@ export const MessageList = () => {
       const el = scrollRef.current;
 
       if (el) {
-        el.scrollTop = el.scrollHeight;
+        bottomRef.current?.scrollIntoView({ block: "end" });
         setHasInitialScrolled(true);
         setIsAtBottom(true);
       }
     }
   }, [hasInitialScrolled, data?.pages.length]);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+
+    if (!el) return;
+
+    const scrollToBottomIfNeeded = () => {
+      if (isAtBottom || !hasInitialScrolled) {
+        requestAnimationFrame(() => {
+          bottomRef.current?.scrollIntoView({
+            block: "end",
+          });
+        });
+      }
+    };
+
+    const onImageLoad = (e: Event) => {
+      if (e.target instanceof HTMLImageElement) {
+        scrollToBottomIfNeeded();
+      }
+    };
+
+    el.addEventListener("load", onImageLoad);
+
+    /**
+     * Scroll to bottom when the container size changes
+     */
+    const resizeObserver = new ResizeObserver(() => {
+      scrollToBottomIfNeeded();
+    });
+
+    resizeObserver.observe(el);
+
+    /**
+     * Scroll to bottom when the container content changes
+     */
+    const mutationObserver = new MutationObserver(() => {
+      scrollToBottomIfNeeded();
+    });
+
+    mutationObserver.observe(el, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      characterData: true,
+    });
+
+    return () => {
+      resizeObserver.disconnect();
+      mutationObserver.disconnect();
+      el.removeEventListener("load", onImageLoad, true);
+    };
+  }, [isAtBottom, hasInitialScrolled]);
 
   const isNearBottom = (el: HTMLDivElement) => {
     return el.scrollHeight - el.scrollTop - el.clientHeight <= 80;
@@ -99,6 +153,8 @@ export const MessageList = () => {
   const items = useMemo(() => {
     return data?.pages.flatMap((page) => page.items) ?? [];
   }, [data]);
+
+  const isEmpty = !isLoading && !error && items.length === 0;
 
   useEffect(() => {
     if (!items.length) return;
@@ -133,7 +189,7 @@ export const MessageList = () => {
     const el = scrollRef.current;
 
     if (el) {
-      el.scrollTop = el.scrollHeight;
+      bottomRef.current?.scrollIntoView({ block: "end" });
       setIsAtBottom(true);
       setNewMessages(false);
     }
@@ -162,25 +218,46 @@ export const MessageList = () => {
         ref={scrollRef}
         onScroll={handleScroll}
       >
-        {items.map((message) => (
-          <MessageItem key={message.id} message={message} />
-        ))}
+        {isEmpty ? (
+          <div className="flex h-full pt-4">
+            <EmptyState
+              title="No messages yet."
+              description="Start a conversation."
+              href="#"
+              buttonText="Start a conversation"
+            />
+          </div>
+        ) : (
+          items.map((message) => (
+            <MessageItem key={message.id} message={message} />
+          ))
+        )}
 
         <div ref={bottomRef} />
       </div>
 
-      {newMessages && !isAtBottom ? (
+      {!isAtBottom && (
         <Button
           type="button"
-          className="absolute right-8 bottom-4 rounded-full"
+          size="sm"
+          className="absolute right-5 bottom-4 z-20 size-10 rounded-full transition-all duration-200 hover:shadow-xl"
           onClick={(e) => {
             e.stopPropagation();
             scrollToBottom();
           }}
         >
-          New messages
+          <ChevronDownIcon />
         </Button>
-      ) : null}
+      )}
+
+      {isFetchingNextPage && (
+        <div className="pointer-events-none absolute top-0 right-0 left-0 z-20 flex items-center justify-center">
+          <div className="flex items-center gap-2 rounded-md bg-gradient-to-b from-white/80 to-transparent px-3 py-1 backdrop-blur dark:from-neutral-900/80">
+            <Loader2Icon className="size-4 animate-spin text-muted-foreground" />
+            <span>Loading previous messages...</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
