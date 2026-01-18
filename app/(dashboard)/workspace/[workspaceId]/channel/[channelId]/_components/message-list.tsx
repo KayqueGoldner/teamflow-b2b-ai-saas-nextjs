@@ -28,6 +28,7 @@ export const MessageList = () => {
       cursor: pageParam,
       limit: 10,
     }),
+    queryKey: ["message.list", channelId],
     initialPageParam: undefined,
     getNextPageParam: (lastPage) => {
       return lastPage.nextCursor;
