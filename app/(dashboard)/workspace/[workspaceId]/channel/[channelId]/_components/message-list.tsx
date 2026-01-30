@@ -1,6 +1,6 @@
 "use client";
 
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { ChevronDownIcon, Loader2Icon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -57,6 +57,10 @@ export const MessageList = () => {
     staleTime: 30_000,
     refetchOnWindowFocus: false,
   });
+
+  const {
+    data: { user },
+  } = useSuspenseQuery(orpc.workspace.list.queryOptions());
 
   useEffect(() => {
     /**
@@ -230,7 +234,11 @@ export const MessageList = () => {
           </div>
         ) : (
           items.map((message) => (
-            <MessageItem key={message.id} message={message} />
+            <MessageItem
+              key={message.id}
+              currentUserId={user.id}
+              message={message}
+            />
           ))
         )}
 

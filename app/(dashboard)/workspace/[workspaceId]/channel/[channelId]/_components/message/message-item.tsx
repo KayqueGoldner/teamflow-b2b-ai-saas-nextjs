@@ -1,14 +1,23 @@
+"use client";
+
 import Image from "next/image";
+import { useState } from "react";
 
 import { Message } from "@/lib/generated/prisma/client";
 import { getAvatar } from "@/lib/get-avatar";
 import { SafeContent } from "@/components/rich-text-editor/safe-content";
 
+import { EditMessage } from "../toolbar/edit-message";
+import { MessageHoverToolbar } from "../toolbar";
+
 interface MessageItemProps {
   message: Message;
+  currentUserId: string;
 }
 
-export const MessageItem = ({ message }: MessageItemProps) => {
+export const MessageItem = ({ message, currentUserId }: MessageItemProps) => {
+  const [isEditing, setIsEditing] = useState(false);
+
   return (
     <div className="group relative flex gap-x-3 rounded-lg p-3 hover:bg-muted/50">
       <Image
@@ -36,28 +45,44 @@ export const MessageItem = ({ message }: MessageItemProps) => {
           </p>
         </div>
 
-        <div className="max-w-none text-sm break-words">
-          <SafeContent
-            content={JSON.parse(message.content)}
-            className="prose max-w-none text-sm break-words marker:text-primary dark:prose-invert"
+        {isEditing ? (
+          <EditMessage
+            message={message}
+            onCancel={() => setIsEditing(false)}
+            onSave={() => setIsEditing(false)}
           />
-        </div>
+        ) : (
+          <>
+            <div className="max-w-none text-sm break-words">
+              <SafeContent
+                content={JSON.parse(message.content)}
+                className="prose max-w-none text-sm break-words marker:text-primary dark:prose-invert"
+              />
+            </div>
 
-        {message.imageUrl && (
-          <div className="mt-2">
-            <Image
-              src={message.imageUrl}
-              alt="message image"
-              width={512}
-              height={512}
-              className="max-h-[320px] w-auto rounded-md object-contain"
-              loading="lazy"
-              placeholder="blur"
-              blurDataURL={message.imageUrl}
-            />
-          </div>
+            {message.imageUrl && (
+              <div className="mt-2">
+                <Image
+                  src={message.imageUrl}
+                  alt="message image"
+                  width={512}
+                  height={512}
+                  className="max-h-[320px] w-auto rounded-md object-contain"
+                  loading="lazy"
+                  placeholder="blur"
+                  blurDataURL={message.imageUrl}
+                />
+              </div>
+            )}
+          </>
         )}
       </div>
+
+      <MessageHoverToolbar
+        messageId={message.id}
+        canEdit={message.authorId === currentUserId}
+        onEdit={() => setIsEditing(true)}
+      />
     </div>
   );
 };
