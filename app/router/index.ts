@@ -3,6 +3,7 @@ import { createChannel, getChannel, listChannels } from "@/app/router/channel";
 import {
   createMessage,
   listMessages,
+  listThreadReplies,
   updateMessage,
 } from "@/app/router/message";
 import { inviteMember, listMembers } from "@/app/router/member";
@@ -25,5 +26,8 @@ export const router = {
     create: createMessage,
     list: listMessages,
     update: updateMessage,
+    thread: {
+      list: listThreadReplies,
+    },
   },
 };

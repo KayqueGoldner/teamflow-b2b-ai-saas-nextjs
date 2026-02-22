@@ -4,15 +4,20 @@ import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 
 import { orpc } from "@/lib/orpc";
+import { ThreadProvider, useThread } from "@/providers/thread-provider";
 
 import { MessageInputForm } from "./_components/message/message-input-form";
 import { ChannelHeader } from "./_components/channel-header";
 import { MessageList } from "./_components/message-list";
+import { ThreadSidebar } from "./_components/thread/thread-sidebar";
 
 interface ChannelIdPageProps {}
 
 const ChannelIdPage = ({}: ChannelIdPageProps) => {
   const { channelId } = useParams<{ channelId: string }>();
+
+  const { isThreadOpen } = useThread();
+
   const { data, error, isLoading, isSuccess, isError } = useQuery(
     orpc.channel.get.queryOptions({
       input: { channelId },
@@ -44,8 +49,19 @@ const ChannelIdPage = ({}: ChannelIdPageProps) => {
           <MessageInputForm channelId={channelId} user={data.currentUser} />
         </div>
       </div>
+
+      {/* thread sidebar */}
+      {isThreadOpen && <ThreadSidebar />}
     </div>
   );
 };
 
-export default ChannelIdPage;
+const ThisIsTheChannelPage = () => {
+  return (
+    <ThreadProvider>
+      <ChannelIdPage />
+    </ThreadProvider>
+  );
+};
+
+export default ThisIsTheChannelPage;
