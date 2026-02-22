@@ -43,4 +43,10 @@ model Message {
 
   channelId String?
   channel   Channel? @relation(fields: [channelId], references: [id])
+
+  // thread relations
+  parentMessage Message? @relation("MessageThread", fields: [threadId], references: [id], onDelete: Cascade)
+  threadId      String?
+
+  replies Message[] @relation("MessageThread")
 }
