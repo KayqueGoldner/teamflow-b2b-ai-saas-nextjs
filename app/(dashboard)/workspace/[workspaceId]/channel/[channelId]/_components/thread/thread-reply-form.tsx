@@ -4,8 +4,9 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { KindeUser } from "@kinde-oss/kinde-auth-nextjs";
 
 import { Field, FieldError, FieldGroup } from "@/components/ui/field";
 import {
@@ -14,17 +15,22 @@ import {
 } from "@/app/schemas/message";
 import { useAttachmentUpload } from "@/hooks/use-attachment-upload";
 import { orpc } from "@/lib/orpc";
+import { Message } from "@/lib/generated/prisma/client";
+import { getAvatar } from "@/lib/get-avatar";
 
 import { MessageComposer } from "../message/message-composer";
 
 interface ThreadReplyFormProps {
   threadId: string;
+  user: KindeUser<Record<string, unknown>>;
 }
 
-export const ThreadReplyForm = ({ threadId }: ThreadReplyFormProps) => {
+export const ThreadReplyForm = ({ threadId, user }: ThreadReplyFormProps) => {
   const { channelId } = useParams<{ channelId: string }>();
   const upload = useAttachmentUpload();
   const [editorKey, setEditorKey] = useState(0);
+
+  const queryClient = useQueryClient();
 
   const form = useForm<CreateMessageSchemaType>({
     resolver: zodResolver(createMessageSchema),
@@ -41,13 +47,66 @@ export const ThreadReplyForm = ({ threadId }: ThreadReplyFormProps) => {
 
   const createMessage = useMutation(
     orpc.message.create.mutationOptions({
-      onSuccess: () => {
+      onMutate: async (data) => {
+        const listOptions = orpc.message.thread.list.queryOptions({
+          input: {
+            messageId: threadId,
+          },
+        });
+
+        await queryClient.cancelQueries({ queryKey: listOptions.queryKey });
+
+        const previous = queryClient.getQueryData(listOptions.queryKey);
+
+        const optimistic: Message = {
+          id: `optimistic-${crypto.randomUUID()}`,
+          content: data.content,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          authorId: user.id,
+          authorEmail: user.email!,
+          authorName: user.given_name ?? "John Doe",
+          authorAvatar: getAvatar(user.picture, user.email!),
+          channelId: data.channelId,
+          threadId: data.threadId!,
+          imageUrl: data.imageUrl ?? null,
+        };
+
+        queryClient.setQueryData(listOptions.queryKey, (old) => {
+          if (!old) return old;
+
+          return {
+            ...old,
+            messages: [...old.messages, optimistic],
+          };
+        });
+
+        return {
+          listOptions,
+          previous,
+        };
+      },
+      onSuccess: (_data, _vars, ctx) => {
+        const { listOptions } = ctx;
+
+        queryClient.invalidateQueries({
+          queryKey: ctx.listOptions.queryKey,
+        });
+
         form.reset({ channelId, threadId, content: "" });
         upload.onClear();
         setEditorKey((prev) => prev + 1);
         toast.success("Message created successfully");
       },
-      onError: () => {
+      onError: (_error, _vars, ctx) => {
+        if (!ctx) return;
+
+        const { listOptions, previous } = ctx;
+
+        if (previous) {
+          queryClient.setQueryData(listOptions.queryKey, previous);
+        }
+
         return toast.error("Failed to create message");
       },
     }),
