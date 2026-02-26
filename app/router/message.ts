@@ -14,6 +14,10 @@ import { getAvatar } from "@/lib/get-avatar";
 import { Message } from "@/lib/generated/prisma/client";
 import { readSecurityMiddleware } from "@/app/middlewares/arcjet/read";
 
+type MessageListItem = Message & {
+  repliesCount: number;
+};
+
 export const createMessage = base
   .use(requireAuthMiddleware)
   .use(requiredWorkspaceMiddleware)
@@ -101,7 +105,7 @@ export const listMessages = base
   )
   .output(
     z.object({
-      items: z.array(z.custom<Message>()),
+      items: z.array(z.custom<MessageListItem>()),
       nextCursor: z.string().optional(),
     }),
   )
@@ -133,13 +137,25 @@ export const listMessages = base
         : {}),
       take: limit,
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      include: {
+        _count: {
+          select: {
+            replies: true,
+          },
+        },
+      },
     });
+
+    const items: MessageListItem[] = messages.map((message) => ({
+      ...message,
+      repliesCount: message._count.replies,
+    }));
 
     const nextCursor =
       messages.length === limit ? messages[messages.length - 1].id : undefined;
 
     return {
-      items: messages,
+      items,
       nextCursor,
     };
   });

@@ -51,7 +51,7 @@ const ChannelIdPage = ({}: ChannelIdPageProps) => {
       </div>
 
       {/* thread sidebar */}
-      {isThreadOpen && <ThreadSidebar />}
+      {isThreadOpen && <ThreadSidebar user={data.currentUser} />}
     </div>
   );
 };
