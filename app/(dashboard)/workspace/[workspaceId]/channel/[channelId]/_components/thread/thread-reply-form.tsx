@@ -4,7 +4,11 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  InfiniteData,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { toast } from "sonner";
 import { KindeUser } from "@kinde-oss/kinde-auth-nextjs";
 
@@ -17,6 +21,7 @@ import { useAttachmentUpload } from "@/hooks/use-attachment-upload";
 import { orpc } from "@/lib/orpc";
 import { Message } from "@/lib/generated/prisma/client";
 import { getAvatar } from "@/lib/get-avatar";
+import { MessageListItem } from "@/lib/types";
 
 import { MessageComposer } from "../message/message-composer";
 
@@ -54,6 +59,13 @@ export const ThreadReplyForm = ({ threadId, user }: ThreadReplyFormProps) => {
           },
         });
 
+        type MessagePage = {
+          items: Array<MessageListItem>;
+          nextCursor?: string;
+        };
+
+        type InfiniteMessages = InfiniteData<MessagePage>;
+
         await queryClient.cancelQueries({ queryKey: listOptions.queryKey });
 
         const previous = queryClient.getQueryData(listOptions.queryKey);
@@ -80,6 +92,27 @@ export const ThreadReplyForm = ({ threadId, user }: ThreadReplyFormProps) => {
             messages: [...old.messages, optimistic],
           };
         });
+
+        queryClient.setQueryData<InfiniteMessages>(
+          ["message.list", channelId],
+          (old) => {
+            if (!old) return old;
+
+            const pages = old.pages.map((page) => ({
+              ...page,
+              items: page.items.map((item) =>
+                item.id === threadId
+                  ? { ...item, repliesCount: item.repliesCount + 1 }
+                  : item,
+              ),
+            }));
+
+            return {
+              ...old,
+              pages,
+            };
+          },
+        );
 
         return {
           listOptions,
