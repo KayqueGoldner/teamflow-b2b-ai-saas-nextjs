@@ -37,6 +37,18 @@ export const ThreadReply = ({ message }: ThreadReplyProps) => (
           className="prose max-w-none text-sm wrap-break-word marker:text-primary dark:prose-invert"
         />
       </div>
+
+      {message.imageUrl && (
+        <div className="mt-2">
+          <Image
+            src={message.imageUrl}
+            alt="message attachment"
+            width={512}
+            height={512}
+            className="max-h-[320px] w-auto rounded-md object-contain"
+          />
+        </div>
+      )}
     </div>
   </div>
 );

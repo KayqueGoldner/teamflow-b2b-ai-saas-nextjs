@@ -13,10 +13,7 @@ import {
 import { getAvatar } from "@/lib/get-avatar";
 import { Message } from "@/lib/generated/prisma/client";
 import { readSecurityMiddleware } from "@/app/middlewares/arcjet/read";
-
-type MessageListItem = Message & {
-  repliesCount: number;
-};
+import { MessageListItem } from "@/lib/types";
 
 export const createMessage = base
   .use(requireAuthMiddleware)
