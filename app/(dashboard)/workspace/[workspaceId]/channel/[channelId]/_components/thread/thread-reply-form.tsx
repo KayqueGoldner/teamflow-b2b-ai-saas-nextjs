@@ -19,7 +19,6 @@ import {
 } from "@/app/schemas/message";
 import { useAttachmentUpload } from "@/hooks/use-attachment-upload";
 import { orpc } from "@/lib/orpc";
-import { Message } from "@/lib/generated/prisma/client";
 import { getAvatar } from "@/lib/get-avatar";
 import { MessageListItem } from "@/lib/types";
 
@@ -70,7 +69,7 @@ export const ThreadReplyForm = ({ threadId, user }: ThreadReplyFormProps) => {
 
         const previous = queryClient.getQueryData(listOptions.queryKey);
 
-        const optimistic: Message = {
+        const optimistic: MessageListItem = {
           id: `optimistic-${crypto.randomUUID()}`,
           content: data.content,
           createdAt: new Date(),
@@ -82,6 +81,8 @@ export const ThreadReplyForm = ({ threadId, user }: ThreadReplyFormProps) => {
           channelId: data.channelId,
           threadId: data.threadId!,
           imageUrl: data.imageUrl ?? null,
+          replyCount: 0,
+          reactions: [],
         };
 
         queryClient.setQueryData(listOptions.queryKey, (old) => {
@@ -102,7 +103,7 @@ export const ThreadReplyForm = ({ threadId, user }: ThreadReplyFormProps) => {
               ...page,
               items: page.items.map((item) =>
                 item.id === threadId
-                  ? { ...item, repliesCount: item.repliesCount + 1 }
+                  ? { ...item, replyCount: item.replyCount + 1 }
                   : item,
               ),
             }));

@@ -13,6 +13,7 @@ import { orpc } from "@/lib/orpc";
 
 import { EditMessage } from "../toolbar/edit-message";
 import { MessageHoverToolbar } from "../toolbar";
+import { ReactionsBar } from "../reaction/reactions-bar";
 
 interface MessageItemProps {
   message: MessageListItem;
@@ -93,7 +94,16 @@ export const MessageItem = ({ message, currentUserId }: MessageItemProps) => {
               </div>
             )}
 
-            {message.repliesCount > 0 && (
+            <ReactionsBar
+              messageId={message.id}
+              reactions={message.reactions}
+              context={{
+                type: "list",
+                channelId: message.channelId!,
+              }}
+            />
+
+            {message.replyCount > 0 && (
               <button
                 type="button"
                 className="mt-1 inline-flex cursor-pointer items-center gap-1 text-xs text-muted-foreground hover:text-foreground focus-visible:ring-1 focus-visible:ring-border focus-visible:outline-none"
@@ -103,8 +113,8 @@ export const MessageItem = ({ message, currentUserId }: MessageItemProps) => {
               >
                 <MessageSquareIcon className="size-3.5" />
                 <span>
-                  {message.repliesCount}{" "}
-                  {message.repliesCount === 1 ? "reply" : "replies"}
+                  {message.replyCount}{" "}
+                  {message.replyCount === 1 ? "reply" : "replies"}
                 </span>
                 <span className="opacity-0 transition-opacity group-hover:opacity-100">
                   View Thread

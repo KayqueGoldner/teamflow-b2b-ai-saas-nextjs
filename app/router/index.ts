@@ -4,6 +4,7 @@ import {
   createMessage,
   listMessages,
   listThreadReplies,
+  toggleReaction,
   updateMessage,
 } from "@/app/router/message";
 import { inviteMember, listMembers } from "@/app/router/member";
@@ -28,6 +29,9 @@ export const router = {
     update: updateMessage,
     thread: {
       list: listThreadReplies,
+    },
+    reaction: {
+      toggle: toggleReaction,
     },
   },
 };
