@@ -1,13 +1,19 @@
 import Image from "next/image";
 
 import { SafeContent } from "@/components/rich-text-editor/safe-content";
-import { Message } from "@/lib/generated/prisma/client";
+import { MessageListItem } from "@/lib/types";
+
+import { ReactionsBar } from "../reaction/reactions-bar";
 
 interface ThreadReplyProps {
-  message: Message;
+  message: MessageListItem;
+  selectedThreadId: string;
 }
 
-export const ThreadReply = ({ message }: ThreadReplyProps) => (
+export const ThreadReply = ({
+  message,
+  selectedThreadId,
+}: ThreadReplyProps) => (
   <div className="flex gap-3 rounded-lg p-3 hover:bg-muted/30">
     <Image
       src={message.authorAvatar}
@@ -49,6 +55,15 @@ export const ThreadReply = ({ message }: ThreadReplyProps) => (
           />
         </div>
       )}
+
+      <ReactionsBar
+        messageId={message.id}
+        reactions={message.reactions}
+        context={{
+          type: "thread",
+          threadId: selectedThreadId,
+        }}
+      />
     </div>
   </div>
 );
