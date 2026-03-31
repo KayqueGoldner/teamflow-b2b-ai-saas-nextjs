@@ -8,6 +8,7 @@ import {
   updateMessage,
 } from "@/app/router/message";
 import { inviteMember, listMembers } from "@/app/router/member";
+import { generateThreadSummary } from "@/app/router/ai";
 
 export const router = {
   workspace: {
@@ -32,6 +33,16 @@ export const router = {
     },
     reaction: {
       toggle: toggleReaction,
+    },
+  },
+  ai: {
+    // compose: {
+    //   generate:
+    // },
+    thread: {
+      summary: {
+        generate: generateThreadSummary,
+      },
     },
   },
 };
