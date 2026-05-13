@@ -14,6 +14,7 @@ import { SafeContent } from "@/components/rich-text-editor/safe-content";
 import { ThreadReply } from "./thread-reply";
 import { ThreadReplyForm } from "./thread-reply-form";
 import { ThreadSidebarSkeleton } from "./thread-sidebar-skeleton";
+import { SummarizeThread } from "./summarize-thread";
 
 interface ThreadSidebarProps {
   user: KindeUser<Record<string, unknown>>;
@@ -148,7 +149,8 @@ export const ThreadSidebar = ({ user }: ThreadSidebarProps) => {
           <span>Thread</span>
         </div>
 
-        <div className="flex items-center">
+        <div className="flex items-center gap-2">
+          <SummarizeThread messageId={selectedThreadId!} />
           <Button variant="outline" size="icon" onClick={() => closeThread()}>
             <XIcon className="size-4" />
           </Button>
