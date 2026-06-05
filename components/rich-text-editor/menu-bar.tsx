@@ -19,6 +19,8 @@ import {
 import { Toggle } from "@/components/ui/toggle";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { ComposeAssistant } from "@/components/rich-text-editor/compose-assistant";
+import { markdownToJson } from "@/lib/markdown-to-json";
 
 interface MenubarProps {
   editor: Editor | null;
@@ -39,6 +41,7 @@ export const MenuBar = ({ editor }: MenubarProps) => {
         isOrderedList: editor.isActive("orderedList"),
         canUndo: editor.can().undo(),
         canRedo: editor.can().redo(),
+        currentContent: editor.getJSON(),
       };
     },
   });
@@ -46,6 +49,15 @@ export const MenuBar = ({ editor }: MenubarProps) => {
   if (!editor) {
     return null;
   }
+
+  const handleAcceptCompose = (markdown: string) => {
+    try {
+      const json = markdownToJson(markdown);
+      editor.commands.setContent(json);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
     <div className="flex flex-wrap items-center gap-1 rounded-t-lg border border-x-0 border-t-0 border-input bg-card p-2">
@@ -188,6 +200,13 @@ export const MenuBar = ({ editor }: MenubarProps) => {
             </TooltipTrigger>
             <TooltipContent>Redo</TooltipContent>
           </Tooltip>
+        </div>
+        <div className="mx-2 h-6 w-px bg-border" />
+        <div className="flex flex-wrap gap-1">
+          <ComposeAssistant
+            content={JSON.stringify(editorState?.currentContent ?? {})}
+            onAccept={handleAcceptCompose}
+          />
         </div>
       </TooltipProvider>
     </div>
